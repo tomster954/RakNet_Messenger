@@ -1,12 +1,14 @@
 //-----------------------------------------------------------------------------
 //Author: Tom Solarino
-//Description: This is the main menu where you select setting and input
+//Description: This is the main menu where you select setting and input,
+//				also sets up raknet.
 //-----------------------------------------------------------------------------
 
 #ifndef MAIN_MENU_STATE
 #define MAIN_MENU_STATE
 
 #include "PlayStates\ClientState.h"
+#include "RakPeerInterface.h"
 
 #include <string>
 
@@ -20,10 +22,12 @@ public:
 	MainMenuState();
 	~MainMenuState();
 
+	void Initialise(GLFWwindow* a_pWindow);
+
 	void Update(float a_dt);
 	
-	void Draw(GLFWwindow* a_pWindow);
-	void DrawSetUp(GLFWwindow* a_pWindow);
+	void Draw();
+	void DrawSetUp();
 
 	bool IsServer(){ return m_isServer; }
 
@@ -36,7 +40,11 @@ private:
 	void SetUpClient();
 
 	//Private Vars
+	GLFWwindow* m_pWindow;
 	ClientState m_clientState;
+
+	RakNet::RakPeerInterface *m_peer;
+	RakNet::Packet *m_packet;
 
 	char m_serverIPBuff[16];
 	char m_userNameBuff[16];

@@ -21,6 +21,8 @@ m_mainMenuState(MainMenuState())
 
 	ImGui_ImplGlfw_Init(m_pWindow, true);
 
+	m_mainMenuState.Initialise(m_pWindow);
+
 	Run();
 }
 
@@ -88,7 +90,7 @@ void Application::Draw()
 	//Render new frame
 	ImGui_ImplGlfw_NewFrame();
 
-		m_mainMenuState.Draw(m_pWindow);
+		m_mainMenuState.Draw();
 
 	//Render IMGUI
 	ImGui::Render();
