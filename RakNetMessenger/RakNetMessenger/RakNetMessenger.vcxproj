@@ -88,12 +88,14 @@
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\PlayStates\ClientState.cpp" />
     <ClCompile Include="src\PlayStates\MainMenuState.cpp" />
+    <ClCompile Include="src\PlayStates\ServerState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\gl_core_4_4.h" />
     <ClInclude Include="inc\Application.h" />
     <ClInclude Include="inc\PlayStates\ClientState.h" />
     <ClInclude Include="inc\PlayStates\MainMenuState.h" />
+    <ClInclude Include="inc\PlayStates\ServerState.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -8,6 +8,8 @@
 #define MAIN_MENU_STATE
 
 #include "PlayStates\ClientState.h"
+#include "PlayStates\ServerState.h"
+
 #include "RakPeerInterface.h"
 
 #include <string>
@@ -42,12 +44,15 @@ private:
 	//Private Vars
 	GLFWwindow* m_pWindow;
 	ClientState m_clientState;
+	ServerState m_serverState;
 
 	RakNet::RakPeerInterface *m_peer;
 	RakNet::Packet *m_packet;
 
 	char m_serverIPBuff[16];
 	char m_userNameBuff[16];
+
+	int m_serverRoomSize;
 
 	bool m_isServer;				//Will be true if the user chose server
 	bool m_choseServerOrClient;		//Will be true once the player has chosen either client or server

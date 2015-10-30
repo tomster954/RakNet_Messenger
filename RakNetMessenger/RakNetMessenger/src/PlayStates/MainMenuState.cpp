@@ -10,10 +10,10 @@
 #include <glfw3.h>
 
 #include <string>
-//#include <stdio.h>
 
 MainMenuState::MainMenuState() :
 m_clientState(ClientState()),
+m_serverState(ServerState()),
 m_isServer(NULL),
 m_setUpComplete(false)
 {
@@ -21,6 +21,7 @@ m_setUpComplete(false)
 	//set name and ip to a default value
 	strcpy_s(m_serverIPBuff, "127.0.0.1");
 	strcpy_s(m_userNameBuff, "Anonymous User");
+	m_serverRoomSize = 5;
 }
 
 MainMenuState::~MainMenuState()
@@ -41,6 +42,15 @@ void MainMenuState::SetUpServer()
 	ImGui::Text("Server Set Up");
 	ImGui::Separator();
 	
+	ImGui::Text("Room Size:");
+	ImGui::SliderInt("People", &m_serverRoomSize, 1, 10);
+
+	//If Done button is pressed the setup is complete
+	if (ImGui::Button("Done", ImVec2(100, 40)))
+	{
+		m_serverState.Initialise(m_pWindow, m_peer, 10, m_serverRoomSize);
+		m_setUpComplete = true;
+	}
 }
 
 void MainMenuState::SetUpClient()
@@ -66,8 +76,8 @@ void MainMenuState::SetUpClient()
 		if (m_userNameBuff[0] == 0 && m_userNameBuff[1] == 0)
 			strcpy_s(m_userNameBuff, "Anonymous User");
 
-		m_setUpComplete = true; 
 		m_clientState.Initialise(m_peer, m_serverIPBuff, m_userNameBuff, m_pWindow);
+		m_setUpComplete = true;
 	}
 }
 
