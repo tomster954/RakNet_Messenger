@@ -86,11 +86,13 @@
     <ClCompile Include="dep\imgui\imgui_impl_glfw.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\PlayStates\ClientState.cpp" />
     <ClCompile Include="src\PlayStates\MainMenuState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\gl_core_4_4.h" />
     <ClInclude Include="inc\Application.h" />
+    <ClInclude Include="inc\PlayStates\ClientState.h" />
     <ClInclude Include="inc\PlayStates\MainMenuState.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

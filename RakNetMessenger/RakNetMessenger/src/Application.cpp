@@ -20,8 +20,6 @@ m_mainMenuState(MainMenuState())
 	SetUpGLFW();
 
 	ImGui_ImplGlfw_Init(m_pWindow, true);
-	
-	m_mainMenuState.Initialise();
 
 	Run();
 }
@@ -80,7 +78,7 @@ void Application::Update()
 	m_deltaTime = m_currentTime - m_lastTime; // prev of last frame
 	m_lastTime = m_currentTime;
 
-	m_mainMenuState.Update(m_deltaTime);
+	m_mainMenuState.Update(m_deltaTime);	
 }
 
 void Application::Draw()
