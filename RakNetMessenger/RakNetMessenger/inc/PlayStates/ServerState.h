@@ -6,7 +6,7 @@
 #ifndef SERVER_STATE
 #define SERVER_STATE
 #include "RakPeerInterface.h"
-
+#include <vector>
 struct GLFWwindow;
 
 class ServerState
@@ -21,9 +21,13 @@ public:
 	void Draw();
 	void DrawHeader();
 
-	void CheckPackets();
+	
 
 private:
+	//Private Funcs
+	void CheckPackets();
+	void DisplayServerMessages();
+
 	GLFWwindow *m_pWindow;
 	RakNet::RakPeerInterface *m_peer;
 	RakNet::Packet *m_packet;
@@ -38,6 +42,12 @@ private:
 	int m_currentRoomSize;
 
 	char m_connectionTxt[32];
+	
+	std::vector<std::string> m_serverMessages;
+
+	//TODO: change to array!
+	//std::list<std::string> m_displayMessagesList; //Hold a list of messages that are displayed to the player
+
 private:
 
 };

@@ -40,12 +40,13 @@ void ClientState::Initialise(RakNet::RakPeerInterface *a_peer, char a_serverIP[]
 
 void ClientState::Update(float a_dt)
 {
-	glfwGetWindowSize(m_pWindow, &m_windowWidth, &m_windowHeight);
 	CheckPackets();
 }
 
 void ClientState::Draw()
 {
+	glfwGetWindowSize(m_pWindow, &m_windowWidth, &m_windowHeight);
+
 	//Setting up next window
 	ImGui::SetNextWindowSize(ImVec2((float)m_windowWidth, (float)m_windowHeight), ImGuiSetCond_Always);
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Once);

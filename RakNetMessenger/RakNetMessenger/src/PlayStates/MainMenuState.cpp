@@ -86,6 +86,9 @@ void MainMenuState::Update(float a_dt)
 	if (m_setUpComplete && !m_isServer)
 		m_clientState.Update(a_dt);
 
+	if (m_setUpComplete && m_isServer)
+		m_serverState.Update(a_dt);
+
 }
 
 void MainMenuState::Draw()
@@ -96,7 +99,7 @@ void MainMenuState::Draw()
 		
 		if (m_setUpComplete && m_isServer)
 		{
-			//server state
+			m_serverState.Draw();
 		}
 		if (m_setUpComplete && !m_isServer)
 		{
