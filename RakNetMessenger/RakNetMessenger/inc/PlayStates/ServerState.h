@@ -6,6 +6,8 @@
 #ifndef SERVER_STATE
 #define SERVER_STATE
 #include "RakPeerInterface.h"
+#include "RakNetStatistics.h"
+
 #include <vector>
 struct GLFWwindow;
 
@@ -34,6 +36,8 @@ private:
 
 	char m_serverIPBuff[16];
 	char m_userNameBuff[16];
+	char m_serverStatsStrBuff[255];
+	char m_connectionTxt[32];
 
 	int m_windowWidth;
 	int m_windowHeight;
@@ -41,13 +45,10 @@ private:
 	int m_totalMaxClients;
 	int m_currentRoomSize;
 
-	char m_connectionTxt[32];
 	
 	std::vector<std::string> m_serverMessages;
 
-	//TODO: change to array!
-	//std::list<std::string> m_displayMessagesList; //Hold a list of messages that are displayed to the player
-
+	RakNet::RakNetStatistics m_serverStats;
 private:
 
 };

@@ -3,12 +3,17 @@
 #include <imgui.h>
 
 #include "MessageIdentifiers.h"
+#include "RakNetStatistics.h"
+
 #include "BitStream.h"
 #include "glfw3.h"
 
+#include <string>
+
 #define SERVER_PORT 60000
 #define TOTAL_MAX_CLIENTS 10
-ServerState::ServerState()
+ServerState::ServerState() : 
+m_serverStats(RakNet::RakNetStatistics())
 {
 }
 
@@ -55,8 +60,29 @@ void ServerState::Draw()
 
 void ServerState::DrawHeader()
 {
+	RakNet::SystemAddress address;
+
+	address = m_peer->GetSystemAddressFromGuid(m_peer->GetMyGUID());
+
+	RakNet::SystemIndex index;
+	index = m_peer->GetIndexFromSystemAddress(address);
+
+	//Cnst systemadress
+	m_peer->GetStatistics(address, &m_serverStats);
+
+	RakNet::StatisticsToString(&m_serverStats, m_serverStatsStrBuff, 0);
+
+	unsigned short connections;
+	m_peer->GetConnectionList(&address, &connections);
+
+	ImGui::Text(connections.to);
+
+	//m_serverStats->StatisticsToString
+
+	ImGui::Text(m_serverStatsStrBuff);
 	//TODO display info ie server size, connected people, ping if ur cool...
-	ImGui::Text("server Stats here");
+	ImGui::Text("Room: 3/10");
+	ImGui::Text("Up Time: 01.20.19");
 	ImGui::Separator();
 }
 
