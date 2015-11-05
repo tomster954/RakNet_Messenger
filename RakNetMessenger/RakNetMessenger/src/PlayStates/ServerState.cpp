@@ -2,10 +2,13 @@
 
 #include <imgui.h>
 
+#include "ClientMessageStruct.h"
+
 #include "MessageIdentifiers.h"
 #include "RakNetStatistics.h"
-
 #include "BitStream.h"
+#include "MyMessageIdentifiers.h"
+
 #include "glfw3.h"
 
 #include <string>
@@ -60,26 +63,21 @@ void ServerState::Draw()
 
 void ServerState::DrawHeader()
 {
-	RakNet::SystemAddress address;
+	////Getting the address
+	//RakNet::SystemAddress address;
+	//address = m_peer->GetSystemAddressFromGuid(m_peer->GetMyGUID());
+	//
+	////Drawing server stats
+	//m_peer->GetStatistics(address, &m_serverStats);
+	//RakNet::StatisticsToString(&m_serverStats, m_serverStatsStrBuff, 0);
+	//ImGui::Text(m_serverStatsStrBuff);
+	//
+	////Finding the number of connections
+	//unsigned short connections;
+	//m_peer->GetConnectionList(&address, &connections);
+	//std::string blah = std::to_string(connections);
+	//ImGui::Text(blah.c_str());
 
-	address = m_peer->GetSystemAddressFromGuid(m_peer->GetMyGUID());
-
-	RakNet::SystemIndex index;
-	index = m_peer->GetIndexFromSystemAddress(address);
-
-	//Cnst systemadress
-	m_peer->GetStatistics(address, &m_serverStats);
-
-	RakNet::StatisticsToString(&m_serverStats, m_serverStatsStrBuff, 0);
-
-	unsigned short connections;
-	m_peer->GetConnectionList(&address, &connections);
-
-	ImGui::Text(connections.to);
-
-	//m_serverStats->StatisticsToString
-
-	ImGui::Text(m_serverStatsStrBuff);
 	//TODO display info ie server size, connected people, ping if ur cool...
 	ImGui::Text("Room: 3/10");
 	ImGui::Text("Up Time: 01.20.19");
@@ -92,6 +90,27 @@ void ServerState::CheckPackets()
 	{
 		switch (m_packet->data[0])
 		{
+			case ID_SEND_MESSAGE:
+			{
+				//TODO:: RECEIVE AND SEND TO ALL CLIENTS
+				
+				ClientMessage rs;
+				//Recieved a message from a client
+				RakNet::BitStream bsIn(m_packet->data, m_packet->length, false);
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				bsIn.Read(rs);
+
+				//send to all clients
+				RakNet::BitStream bsOut;
+				bsOut.Write((RakNet::MessageID)ID_SEND_MESSAGE);
+				bsOut.Write<ClientMessage>(rs);
+				m_peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_packet->systemAddress, true);
+				
+				//Print message to client
+				std::string space = ": ";
+				m_serverMessages.push_back(rs.name + space + rs.message);
+
+			}break;
 			//--------------------------------------------------------------------------
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
 			{
@@ -117,22 +136,22 @@ void ServerState::CheckPackets()
 				
 				m_serverMessages.push_back(rs.C_String() + s);
 
-				RakNet::SystemAddress addressList[TOTAL_MAX_CLIENTS];
-
-				unsigned short ushort = m_currentRoomSize;
-				m_peer->GetConnectionList(addressList, &ushort);
-
-				for (int i = 0; i < ushort; i++)
-				{
-				  if (addressList[i] == m_packet->systemAddress)
-					  continue;
+				//RakNet::SystemAddress addressList[TOTAL_MAX_CLIENTS];
+				//
+				//unsigned short ushort = m_currentRoomSize;
+				//m_peer->GetConnectionList(addressList, &ushort);
+				//
+				//for (int i = 0; i < ushort; i++)
+				//{
+				//  if (addressList[i] == m_packet->systemAddress)
+				//	  continue;
 
 				  //TODO send name to all clients
 				  RakNet::BitStream bsOut;
 				  bsOut.Write((RakNet::MessageID)ID_REMOTE_NEW_INCOMING_CONNECTION);
 				  bsOut.Write(rs.C_String());
-				  m_peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, addressList[i], false);
-				}
+				  m_peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_packet->systemAddress, true);
+				//}
 			}break;
 			//--------------------------------------------------------------------------
 

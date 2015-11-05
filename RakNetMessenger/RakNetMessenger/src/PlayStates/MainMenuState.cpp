@@ -152,6 +152,3 @@ void MainMenuState::DrawSetUp()
 	ImGui::End();
 	//END
 }
-
-//ImGui::InputText("Message", m_messageBuff, 255);
-//m_userMessage = m_messageBuff;

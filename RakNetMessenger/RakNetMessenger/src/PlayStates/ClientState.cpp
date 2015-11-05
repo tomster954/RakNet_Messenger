@@ -2,12 +2,17 @@
 
 #include <imgui.h>
 
+#include "ClientMessageStruct.h"
+
 #include "MessageIdentifiers.h"
+#include "RakNetStatistics.h"
 #include "BitStream.h"
+#include "MyMessageIdentifiers.h"
 
 #include <glfw3.h>
 
 #include <string>
+#include <stdio.h>
 
 const struct TxtColours
 {
@@ -15,7 +20,8 @@ const struct TxtColours
 
 };
 
-ClientState::ClientState()
+ClientState::ClientState():
+m_clientMessage(ClientMessage())
 {
 	strcpy_s(m_connectionTxt, "Error Connecting");
 }
@@ -27,8 +33,10 @@ ClientState::~ClientState()
 
 void ClientState::Initialise(RakNet::RakPeerInterface *a_peer, char a_serverIP[], char a_userName[], GLFWwindow *a_pWindow)
 {
+	strcpy_s(m_clientMessage.name, a_userName);
+	strcpy_s(m_clientMessage.message, "No Message");
+	
 	m_peer = a_peer;
-	strcpy_s(m_userNameBuff, a_userName);
 	strcpy_s(m_serverIPBuff, a_serverIP);
 	m_pWindow = a_pWindow;
 
@@ -63,12 +71,74 @@ void ClientState::Draw()
 
 void ClientState::DrawHeader()
 {
-	ImGui::TextColored(TxtColours().green, "Name:");		ImGui::SameLine();	ImGui::Text(m_userNameBuff);
+	DrawConnectionStats();
+
+	ImGui::TextColored(TxtColours().green, "Name:");		ImGui::SameLine();	ImGui::Text(m_clientMessage.name);
 
 	ImGui::TextColored(TxtColours().green, "Server IP:");	ImGui::SameLine();	ImGui::Text(m_serverIPBuff);	ImGui::SameLine();
 	ImGui::Dummy(ImVec2(100, 10));	ImGui::SameLine();		ImGui::TextColored(TxtColours().green, "Connection: ");		ImGui::SameLine(); ImGui::Text(m_connectionTxt);
 
 	ImGui::Separator();
+
+	TextBoxInput();
+}
+
+void ClientState::DrawConnectionStats()
+{
+	RakNet::SystemAddress address;
+	unsigned short connections;
+
+	m_peer->GetConnectionList(&address, &connections);
+	
+	if (connections > 0)
+	{
+		m_peer->GetStatistics(address, &m_connectionStats);
+		RakNet::StatisticsToString(&m_connectionStats, m_connectionStatsStrBuff, 0);
+		ImGui::Text(m_connectionStatsStrBuff);
+	}
+}
+
+void ClientState::TextBoxInput()
+{
+	int width;
+	int height;
+
+	int textBoxHeight = 50;
+
+	glfwGetWindowSize(m_pWindow, &width, &height);
+
+	ImGui::Dummy(ImVec2(width, height - 140 ));
+	
+
+	ImGui::InputTextMultiline("", m_clientMessageBuff, sizeof(m_clientMessageBuff), ImVec2(width * 0.8f, textBoxHeight), ImGuiInputTextFlags_CtrlEnterForNewLine);
+	ImGui::SameLine();
+	
+	if (ImGui::Button("Send", ImVec2(width * 0.19, textBoxHeight)))
+	{
+		//TODO Send the message
+		RakNet::SystemAddress address;
+		unsigned short numOfCons;
+
+		m_peer->GetConnectionList(&address, &numOfCons);
+		if (numOfCons > 1)
+		{
+			printf("client has more than one connection");
+			abort();
+		}
+		else
+		{
+			//Send name and message
+			strcpy_s(m_clientMessage.message, m_clientMessageBuff);
+			memset(&m_clientMessageBuff[0], 0, sizeof(m_clientMessageBuff));
+
+			RakNet::BitStream bsOut;
+			bsOut.Write((RakNet::MessageID)ID_SEND_MESSAGE);
+			bsOut.Write<ClientMessage>(m_clientMessage);
+			m_peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
+
+
+		}
+	}
 }
 
 void ClientState::CheckPackets()
@@ -77,6 +147,21 @@ void ClientState::CheckPackets()
 	{
 		switch (m_packet->data[0])
 		{
+			case ID_SEND_MESSAGE:
+			{
+				//TODFO:: READ MESSAGE SENT FROM SERVER
+				ClientMessage rs;
+				//Recieved a message from the server
+				RakNet::BitStream bsIn(m_packet->data, m_packet->length, false);
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				bsIn.Read(rs);
+				
+				std::string space = ": ";
+				printf(rs.name);
+				printf(rs.message);
+				
+				//m_serverMessages.push_back(rs.name + space + rs.message); 
+			}break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 			{
 				//When the client is accepted
@@ -86,7 +171,7 @@ void ClientState::CheckPackets()
 				//Send Name
 				RakNet::BitStream bsOut;
 				bsOut.Write((RakNet::MessageID)ID_REMOTE_NEW_INCOMING_CONNECTION);
-				bsOut.Write(m_userNameBuff);
+				bsOut.Write(m_clientMessage.name);
 				m_peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_packet->systemAddress, false);
 			}break;
 			case ID_CONNECTION_ATTEMPT_FAILED:

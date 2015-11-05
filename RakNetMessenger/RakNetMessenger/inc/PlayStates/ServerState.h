@@ -7,7 +7,7 @@
 #define SERVER_STATE
 #include "RakPeerInterface.h"
 #include "RakNetStatistics.h"
-
+#include "ClientMessageStruct.h"
 #include <vector>
 struct GLFWwindow;
 
@@ -33,6 +33,8 @@ private:
 	GLFWwindow *m_pWindow;
 	RakNet::RakPeerInterface *m_peer;
 	RakNet::Packet *m_packet;
+
+	
 
 	char m_serverIPBuff[16];
 	char m_userNameBuff[16];

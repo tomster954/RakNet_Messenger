@@ -56,5 +56,11 @@
     <ClInclude Include="inc\PlayStates\ServerState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\MyMessageIdentifiers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\ClientMessageStruct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
