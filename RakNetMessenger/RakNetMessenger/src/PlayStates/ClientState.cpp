@@ -20,15 +20,15 @@ const struct TxtColours
 
 };
 
-ClientState::ClientState():
-m_clientMessage(ClientMessage())
+ClientState::ClientState() :
+m_clientMessage(ClientMessage()),
+m_displaymessagesPrevCount(0)
 {
 	strcpy_s(m_connectionTxt, "Error Connecting");
 }
 
 ClientState::~ClientState()
 {
-
 }
 
 void ClientState::Initialise(RakNet::RakPeerInterface *a_peer, char a_serverIP[], char a_userName[], GLFWwindow *a_pWindow)
@@ -60,12 +60,16 @@ void ClientState::Draw()
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Once);
 
 	//BEGIN
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);	
 	ImGui::Begin("Messenger", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
 		DrawHeader();
-		//TODO: Draw text box
+		DisplayServerMessages();
+
+		TextBoxInput();
 
 	ImGui::End();
+	ImGui::PopStyleVar();
 	//END
 }
 
@@ -79,8 +83,6 @@ void ClientState::DrawHeader()
 	ImGui::Dummy(ImVec2(100, 10));	ImGui::SameLine();		ImGui::TextColored(TxtColours().green, "Connection: ");		ImGui::SameLine(); ImGui::Text(m_connectionTxt);
 
 	ImGui::Separator();
-
-	TextBoxInput();
 }
 
 void ClientState::DrawConnectionStats()
@@ -98,6 +100,34 @@ void ClientState::DrawConnectionStats()
 	}
 }
 
+void ClientState::DisplayServerMessages()
+{
+	//BEGIN
+	ImGui::BeginChild("test", ImVec2((float)m_windowWidth - 15, (float)m_windowHeight*.5f), true, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+		//Loops through all messages to display
+		for (int i = 0; i < m_displayMessages.size(); i++)
+		{
+			ImGui::Text(m_displayMessages[i].c_str());
+		}
+
+		//If true will scroll to the bottom of the messages
+		if (m_scrollToBottom)
+		{
+			ImGui::SetScrollY(ImGui::GetScrollMaxY());
+			m_scrollToBottom = false;
+		}
+		//If the are more messages set scroll down to true
+		if (m_displaymessagesPrevCount != m_displayMessages.size()) m_scrollToBottom = true;
+		
+		//setting the message count
+		m_displaymessagesPrevCount = m_displayMessages.size();
+
+	
+	ImGui::EndChild();
+	//END
+}
+
 void ClientState::TextBoxInput()
 {
 	int width;
@@ -107,37 +137,33 @@ void ClientState::TextBoxInput()
 
 	glfwGetWindowSize(m_pWindow, &width, &height);
 
-	ImGui::Dummy(ImVec2(width, height - 140 ));
+	//ImGui::Dummy(ImVec2(width, height - 140 ));
 	
 
 	ImGui::InputTextMultiline("", m_clientMessageBuff, sizeof(m_clientMessageBuff), ImVec2(width * 0.8f, textBoxHeight), ImGuiInputTextFlags_CtrlEnterForNewLine);
 	ImGui::SameLine();
 	
+	//If the send button is pressed
 	if (ImGui::Button("Send", ImVec2(width * 0.19, textBoxHeight)))
 	{
-		//TODO Send the message
-		RakNet::SystemAddress address;
+		//Getting the server adress
+		RakNet::SystemAddress address[1];
 		unsigned short numOfCons;
+		m_peer->GetConnectionList(address, &numOfCons);
+		
+		//Copy message buffer into the clients message
+		strcpy_s(m_clientMessage.message, m_clientMessageBuff);
+		memset(&m_clientMessageBuff[0], 0, sizeof(m_clientMessageBuff));
 
-		m_peer->GetConnectionList(&address, &numOfCons);
-		if (numOfCons > 1)
-		{
-			printf("client has more than one connection");
-			abort();
-		}
-		else
-		{
-			//Send name and message
-			strcpy_s(m_clientMessage.message, m_clientMessageBuff);
-			memset(&m_clientMessageBuff[0], 0, sizeof(m_clientMessageBuff));
+		//Send name and message
+		RakNet::BitStream bsOut;
+		bsOut.Write((RakNet::MessageID)ID_SEND_MESSAGE);
+		bsOut.Write<ClientMessage>(m_clientMessage);
+		m_peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address[0], false);
 
-			RakNet::BitStream bsOut;
-			bsOut.Write((RakNet::MessageID)ID_SEND_MESSAGE);
-			bsOut.Write<ClientMessage>(m_clientMessage);
-			m_peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
-
-
-		}
+		//Display message to this client
+		std::string s = "You: ";
+		m_displayMessages.push_back(s + m_clientMessage.message);
 	}
 }
 
@@ -149,61 +175,58 @@ void ClientState::CheckPackets()
 		{
 			case ID_SEND_MESSAGE:
 			{
-				//TODFO:: READ MESSAGE SENT FROM SERVER
 				ClientMessage rs;
-				//Recieved a message from the server
+				//Recieved a client message from the server
 				RakNet::BitStream bsIn(m_packet->data, m_packet->length, false);
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				bsIn.Read(rs);
 				
+				//Display the clients message to this client
 				std::string space = ": ";
-				printf(rs.name);
-				printf(rs.message);
-				
-				//m_serverMessages.push_back(rs.name + space + rs.message); 
+				m_displayMessages.push_back(rs.name + space + rs.message);
+
 			}break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 			{
 				//When the client is accepted
-				strcpy_s(m_connectionTxt, "Connected");
-				printf("Conneted");
-				
-				//Send Name
+				strcpy_s(m_connectionTxt, "Connected \n");
+
+				//Send Name to server
 				RakNet::BitStream bsOut;
 				bsOut.Write((RakNet::MessageID)ID_REMOTE_NEW_INCOMING_CONNECTION);
-				bsOut.Write(m_clientMessage.name);
+				bsOut.Write<ClientMessage>(m_clientMessage);
 				m_peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, m_packet->systemAddress, false);
 			}break;
 			case ID_CONNECTION_ATTEMPT_FAILED:
 			{
-				strcpy_s(m_connectionTxt, "Connection Failed... (Wrong IP)");
-				printf("Connection Failed");
+				strcpy_s(m_connectionTxt, "Connection Failed...(Wrong IP)");
 			}break;
 			//--------------------------------------------------------------------------
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
 			{
 				strcpy_s(m_connectionTxt, "The server is full...");
-				printf("server full");
 			}break;
 			//--------------------------------------------------------------------------
 			case ID_DISCONNECTION_NOTIFICATION:
 			{
 				strcpy_s(m_connectionTxt, "You were disconnected...");
-				printf("Disconnected");
 			}break;
 			//--------------------------------------------------------------------------
 			case ID_CONNECTION_LOST:
 			{
 				strcpy_s(m_connectionTxt, "Connection lost..");
-				printf("connection lost");
 			}break;
 			case ID_REMOTE_NEW_INCOMING_CONNECTION:
 			{
-				RakNet::RakString rs;
+				//Recieve connections name
+				ClientMessage rs;
 				RakNet::BitStream bsIn(m_packet->data, m_packet->length, false);
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				bsIn.Read(rs);
-				printf("%s%s", rs.C_String(), " has connected \n");
+				
+				//Display connections name
+				std::string s = " has Connected";
+				m_displayMessages.push_back(rs.name + s);
 			}break;
 		}
 	}

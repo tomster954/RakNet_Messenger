@@ -9,6 +9,7 @@
 #include "RakNetStatistics.h"
 
 #include "ClientMessageStruct.h"
+#include <vector>
 
 struct GLFWwindow;
 
@@ -26,6 +27,7 @@ public:
 	void DrawHeader();
 	void DrawConnectionStats();
 	void TextBoxInput();
+	void DisplayServerMessages();
 
 	void CheckPackets();
 
@@ -38,15 +40,16 @@ private:
 
 	ClientMessage m_clientMessage;
 
-	char m_serverIPBuff[16];
-	char m_userNameBuff[16];
-	char m_connectionStatsStrBuff[255];
-	char m_clientMessageBuff[255];
+	char m_serverIPBuff[16];			//The buff for the server IP
+	char m_connectionStatsStrBuff[255]; //This is for the connection stats to the server
+	char m_clientMessageBuff[255];		//This is the clients message to everyone
+	char m_connectionTxt[32];			//This is the connection status displayed at top of clients screen
 
 	int m_windowWidth;
 	int m_windowHeight;
 
-	char m_connectionTxt[32];
-
+	std::vector<std::string> m_displayMessages; //Veector of client messages that gets displayed
+	int m_displaymessagesPrevCount;				//Count the prevoise frames message count
+	bool m_scrollToBottom;						//If true will scroll to the bottom of messages
 };
 #endif
