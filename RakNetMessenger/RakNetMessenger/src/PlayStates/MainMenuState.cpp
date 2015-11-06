@@ -121,33 +121,28 @@ void MainMenuState::DrawSetUp()
 	ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Always);
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Once);
 	//BEGIN
-	ImGui::Begin("SetUp", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_ShowBorders);
+	ImGui::Begin("Main Menu", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_ShowBorders);
 	
 		ImGui::Text("Choose to be a client or server");
 
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		if (ImGui::Button("Client", ImVec2(100, 40)) && m_choseServerOrClient == false)
+		if (ImGui::Button("Client", ImVec2(100, 40)))
 		{
 			m_isServer = false;
-			m_choseServerOrClient = true;
 		}
 
 		ImGui::SameLine(0, 100);
 
-		if (ImGui::Button("Server", ImVec2(100, 40)) && m_choseServerOrClient == false)
+		if (ImGui::Button("Server", ImVec2(100, 40)))
 		{
 			m_isServer = true;
-			m_choseServerOrClient = true;
 		}
 
 		//will setup either the server or client if the player has selected an option
-		if (m_choseServerOrClient == true)
-		{
-			if (m_isServer){ SetUpServer(); }
-			if (!m_isServer){ SetUpClient(); }
-		}
+		if (m_isServer){ SetUpServer(); }
+		if (!m_isServer){ SetUpClient(); }
 
 	ImGui::End();
 	//END

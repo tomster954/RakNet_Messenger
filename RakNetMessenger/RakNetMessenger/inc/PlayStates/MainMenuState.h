@@ -55,6 +55,5 @@ private:
 	int m_serverRoomSize;
 
 	bool m_isServer;				//Will be true if the user chose server
-	bool m_choseServerOrClient;		//Will be true once the player has chosen either client or server
 };
 #endif

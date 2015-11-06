@@ -103,7 +103,7 @@ void ClientState::DrawConnectionStats()
 void ClientState::DisplayServerMessages()
 {
 	//BEGIN
-	ImGui::BeginChild("test", ImVec2((float)m_windowWidth - 15, (float)m_windowHeight*.5f), true, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::BeginChild("test", ImVec2((float)m_windowWidth - 15, (float)m_windowHeight - 150), true, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
 		//Loops through all messages to display
 		for (int i = 0; i < m_displayMessages.size(); i++)
@@ -137,15 +137,24 @@ void ClientState::TextBoxInput()
 
 	glfwGetWindowSize(m_pWindow, &width, &height);
 
-	//ImGui::Dummy(ImVec2(width, height - 140 ));
-	
+	//Checking if the user pressed enter or pressed send
+	float sendMessage = false;
 
-	ImGui::InputTextMultiline("", m_clientMessageBuff, sizeof(m_clientMessageBuff), ImVec2(width * 0.8f, textBoxHeight), ImGuiInputTextFlags_CtrlEnterForNewLine);
-	ImGui::SameLine();
-	
-	//If the send button is pressed
-	if (ImGui::Button("Send", ImVec2(width * 0.19, textBoxHeight)))
+	if (ImGui::InputTextMultiline("", m_clientMessageBuff, sizeof(m_clientMessageBuff), ImVec2(width * 0.8f, textBoxHeight), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AlwaysInsertMode))
 	{
+		sendMessage = true;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Send", ImVec2(width * 0.18, textBoxHeight)))
+	{
+		sendMessage = true;
+	}
+
+	//If the send button is pressed
+	if (sendMessage)
+	{
+		//TODO:: Check that there is and actually message
+
 		//Getting the server adress
 		RakNet::SystemAddress address[1];
 		unsigned short numOfCons;
