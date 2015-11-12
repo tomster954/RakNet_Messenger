@@ -17,12 +17,14 @@
 const struct TxtColours
 {
 	ImColor green = ImColor(100, 255, 100, 255);
-
 };
 
 ClientState::ClientState() :
 m_clientMessage(ClientMessage()),
-m_displaymessagesPrevCount(0)
+m_displaymessagesPrevCount(0),
+m_headerHeight(50),
+m_displayMessageBoxHeight(300),
+m_inputBoxHeight(50)
 {
 	strcpy_s(m_connectionTxt, "Error Connecting");
 }
@@ -48,6 +50,9 @@ void ClientState::Initialise(RakNet::RakPeerInterface *a_peer, char a_serverIP[]
 
 void ClientState::Update(float a_dt)
 {
+	int padding = 70;
+	m_displayMessageBoxHeight = m_windowHeight - (m_headerHeight + m_inputBoxHeight + padding);
+
 	CheckPackets();
 }
 
@@ -63,12 +68,11 @@ void ClientState::Draw()
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	if (ImGui::Begin("Messenger", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar))
 	{
-
-		DrawMenuOptions();
+		DisplayOptionsDropDown();
 
 		DrawHeader();
 
-		DisplayServerMessages();
+		DisplayMessages();
 
 		TextBoxInput();
 
@@ -81,14 +85,18 @@ void ClientState::Draw()
 
 void ClientState::DrawHeader()
 {
-	//DrawConnectionStats();
+	//BEGIN
+	ImGui::BeginChild("Header", ImVec2((float)m_windowWidth - 15, m_headerHeight), true, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
-	ImGui::TextColored(TxtColours().green, "Your Name:");		ImGui::SameLine();	ImGui::Text(m_clientMessage.name);
+		ImGui::TextColored(TxtColours().green, "Your Name:");		ImGui::SameLine();	ImGui::Text(m_clientMessage.name);
 
-	ImGui::TextColored(TxtColours().green, "Server IP:");	ImGui::SameLine();	ImGui::Text(m_serverIPBuff);	ImGui::SameLine();
-	ImGui::Dummy(ImVec2(100, 10));	ImGui::SameLine();		ImGui::TextColored(TxtColours().green, "Connection: ");		ImGui::SameLine(); ImGui::Text(m_connectionTxt);
+		ImGui::TextColored(TxtColours().green, "Server IP:");	ImGui::SameLine();	ImGui::Text(m_serverIPBuff);	ImGui::SameLine();
+		ImGui::Dummy(ImVec2(100, 10));	ImGui::SameLine();		ImGui::TextColored(TxtColours().green, "Connection: ");		ImGui::SameLine(); ImGui::Text(m_connectionTxt);
 
-	ImGui::Separator();
+		if (m_displayConnectionStats)
+			DrawConnectionStats();
+
+	ImGui::EndChild();
 }
 
 void ClientState::DrawConnectionStats()
@@ -106,18 +114,18 @@ void ClientState::DrawConnectionStats()
 	}
 }
 
-void ClientState::DisplayServerMessages()
+void ClientState::DisplayMessages()
 {
 	//BEGIN
-	ImGui::BeginChild("test", ImVec2((float)m_windowWidth - 15, (float)m_windowHeight - 180), true, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::BeginChild("Display messages", ImVec2((float)m_windowWidth - 15, m_displayMessageBoxHeight), true, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
 		//Loops through all messages to display
-		for (int i = 0; i < m_displayMessages.size(); i++)
+		for (int i = 0; i < m_allDisplayMessages.size(); i++)
 		{
 			//Name : Text
-			ImGui::TextColored(ImVec4(.8, 1, .8, 1), m_displayMessages[i].name); ImGui::SameLine();
+			ImGui::TextColored(ImVec4(.8, 1, .8, 1), m_allDisplayMessages[i].name); ImGui::SameLine();
 			ImGui::TextColored(ImVec4(.8, 1, .8, 1), ":"); ImGui::SameLine();
-			ImGui::Text(m_displayMessages[i].message);
+			ImGui::Text(m_allDisplayMessages[i].message);
 		}
 
 		//If true will scroll to the bottom of the messages
@@ -127,10 +135,10 @@ void ClientState::DisplayServerMessages()
 			m_scrollToBottom = false;
 		}
 		//If the are more messages set scroll down to true
-		if (m_displaymessagesPrevCount != m_displayMessages.size()) m_scrollToBottom = true;
+		if (m_displaymessagesPrevCount != m_allDisplayMessages.size()) m_scrollToBottom = true;
 		
 		//setting the message count
-		m_displaymessagesPrevCount = m_displayMessages.size();
+		m_displaymessagesPrevCount = m_allDisplayMessages.size();
 
 	
 	ImGui::EndChild();
@@ -142,19 +150,17 @@ void ClientState::TextBoxInput()
 	int width;
 	int height;
 
-	int textBoxHeight = 50;
-
 	glfwGetWindowSize(m_pWindow, &width, &height);
 
 	//Checking if the user pressed enter or pressed send
 	float sendMessage = false;
 
-	if (ImGui::InputTextMultiline("", m_clientMessageBuff, sizeof(m_clientMessageBuff), ImVec2(width * 0.8f, textBoxHeight), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AlwaysInsertMode))
+	if (ImGui::InputTextMultiline("", m_clientMessageBuff, sizeof(m_clientMessageBuff), ImVec2(width * 0.8f, m_inputBoxHeight), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AlwaysInsertMode))
 	{
 		sendMessage = true;
 	}
 	ImGui::SameLine();
-	if (ImGui::Button("Send", ImVec2(width * 0.18, textBoxHeight)))
+	if (ImGui::Button("Send", ImVec2(width * 0.18, m_inputBoxHeight)))
 	{
 		sendMessage = true;
 	}
@@ -185,24 +191,39 @@ void ClientState::TextBoxInput()
 		ClientMessage messBuff = m_clientMessage;
 		strcpy_s(messBuff.name, sizeof(messBuff.name), s.c_str());
 
-		m_displayMessages.push_back(messBuff);
+		m_allDisplayMessages.push_back(messBuff);
 	}
 }
 
-void ClientState::DrawMenuOptions()
+void ClientState::DisplayOptionsDropDown()
 {
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu("Options"))
 		{
-			if (ImGui::MenuItem("ServerStats")) {}
-			if (ImGui::MenuItem("IP")) {}
-			if (ImGui::MenuItem("Name")) {}
+			if (ImGui::MenuItem("ServerStats",NULL, m_displayConnectionStats)) 
+			{
+				m_displayConnectionStats = !m_displayConnectionStats;
+				
+				if (m_displayConnectionStats)
+					m_headerHeight += 40;
+				else
+					m_headerHeight -= 40;
+			}
+			if (ImGui::MenuItem("IP")) 
+			{
+				//TODO:: add a way of changing the ip if possible
+			}
+			if (ImGui::MenuItem("Name")) 
+			{
+				//TODO abilty to change name :)
+			}
 			ImGui::EndMenu();
 		}
 		
 		if (ImGui::BeginMenu("People"))
 		{
+			//TODO::Actually display connected people
 			ImGui::MenuItem("Person1");
 			ImGui::MenuItem("Person2");
 			ImGui::MenuItem("Person3");
@@ -229,7 +250,7 @@ void ClientState::CheckPackets()
 				
 				//Display the clients message to this client
 
-				m_displayMessages.push_back(rs);
+				m_allDisplayMessages.push_back(rs);
 
 			}break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
@@ -276,7 +297,7 @@ void ClientState::CheckPackets()
 				ClientMessage messBuff = rs;
 				strcpy_s(messBuff.message, s.c_str());
 
-				m_displayMessages.push_back(messBuff);
+				m_allDisplayMessages.push_back(messBuff);
 			}break;
 		}
 	}
