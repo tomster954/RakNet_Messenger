@@ -60,24 +60,30 @@ void ClientState::Draw()
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Once);
 
 	//BEGIN
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);	
-	ImGui::Begin("Messenger", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+	if (ImGui::Begin("Messenger", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar))
+	{
+
+		DrawMenuOptions();
 
 		DrawHeader();
+
 		DisplayServerMessages();
 
 		TextBoxInput();
 
+	}
 	ImGui::End();
 	ImGui::PopStyleVar();
 	//END
+	
 }
 
 void ClientState::DrawHeader()
 {
-	DrawConnectionStats();
+	//DrawConnectionStats();
 
-	ImGui::TextColored(TxtColours().green, "Name:");		ImGui::SameLine();	ImGui::Text(m_clientMessage.name);
+	ImGui::TextColored(TxtColours().green, "Your Name:");		ImGui::SameLine();	ImGui::Text(m_clientMessage.name);
 
 	ImGui::TextColored(TxtColours().green, "Server IP:");	ImGui::SameLine();	ImGui::Text(m_serverIPBuff);	ImGui::SameLine();
 	ImGui::Dummy(ImVec2(100, 10));	ImGui::SameLine();		ImGui::TextColored(TxtColours().green, "Connection: ");		ImGui::SameLine(); ImGui::Text(m_connectionTxt);
@@ -103,12 +109,15 @@ void ClientState::DrawConnectionStats()
 void ClientState::DisplayServerMessages()
 {
 	//BEGIN
-	ImGui::BeginChild("test", ImVec2((float)m_windowWidth - 15, (float)m_windowHeight - 150), true, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::BeginChild("test", ImVec2((float)m_windowWidth - 15, (float)m_windowHeight - 180), true, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
 		//Loops through all messages to display
 		for (int i = 0; i < m_displayMessages.size(); i++)
 		{
-			ImGui::Text(m_displayMessages[i].c_str());
+			//Name : Text
+			ImGui::TextColored(ImVec4(.8, 1, .8, 1), m_displayMessages[i].name); ImGui::SameLine();
+			ImGui::TextColored(ImVec4(.8, 1, .8, 1), ":"); ImGui::SameLine();
+			ImGui::Text(m_displayMessages[i].message);
 		}
 
 		//If true will scroll to the bottom of the messages
@@ -171,8 +180,36 @@ void ClientState::TextBoxInput()
 		m_peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address[0], false);
 
 		//Display message to this client
-		std::string s = "You: ";
-		m_displayMessages.push_back(s + m_clientMessage.message);
+		std::string s = "You";
+
+		ClientMessage messBuff = m_clientMessage;
+		strcpy_s(messBuff.name, sizeof(messBuff.name), s.c_str());
+
+		m_displayMessages.push_back(messBuff);
+	}
+}
+
+void ClientState::DrawMenuOptions()
+{
+	if (ImGui::BeginMenuBar())
+	{
+		if (ImGui::BeginMenu("Options"))
+		{
+			if (ImGui::MenuItem("ServerStats")) {}
+			if (ImGui::MenuItem("IP")) {}
+			if (ImGui::MenuItem("Name")) {}
+			ImGui::EndMenu();
+		}
+		
+		if (ImGui::BeginMenu("People"))
+		{
+			ImGui::MenuItem("Person1");
+			ImGui::MenuItem("Person2");
+			ImGui::MenuItem("Person3");
+
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
 	}
 }
 
@@ -191,8 +228,8 @@ void ClientState::CheckPackets()
 				bsIn.Read(rs);
 				
 				//Display the clients message to this client
-				std::string space = ": ";
-				m_displayMessages.push_back(rs.name + space + rs.message);
+
+				m_displayMessages.push_back(rs);
 
 			}break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
@@ -234,8 +271,12 @@ void ClientState::CheckPackets()
 				bsIn.Read(rs);
 				
 				//Display connections name
-				std::string s = " has Connected";
-				m_displayMessages.push_back(rs.name + s);
+				std::string s = "has Connected";
+
+				ClientMessage messBuff = rs;
+				strcpy_s(messBuff.message, s.c_str());
+
+				m_displayMessages.push_back(messBuff);
 			}break;
 		}
 	}

@@ -146,7 +146,7 @@ void ImGui::ShowTestWindow(bool* opened)
     //ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);    // 2/3 of the space for widget and 1/3 for labels
     ImGui::PushItemWidth(-140);                                 // Right align, keep 140 pixels for labels
 
-    ImGui::Text("ImGui says hello.");
+   
 
     // Menu
     if (ImGui::BeginMenuBar())
@@ -177,6 +177,8 @@ void ImGui::ShowTestWindow(bool* opened)
         }
         ImGui::EndMenuBar();
     }
+
+	ImGui::Text("ImGui says hello.");
 
     ImGui::Spacing();
     if (ImGui::CollapsingHeader("Help"))

@@ -28,6 +28,7 @@ public:
 	void DrawConnectionStats();
 	void TextBoxInput();
 	void DisplayServerMessages();
+	void DrawMenuOptions();
 
 	void CheckPackets();
 
@@ -48,7 +49,7 @@ private:
 	int m_windowWidth;
 	int m_windowHeight;
 
-	std::vector<std::string> m_displayMessages; //Veector of client messages that gets displayed
+	std::vector<ClientMessage> m_displayMessages; //Veector of client messages that gets displayed
 	int m_displaymessagesPrevCount;				//Count the prevoise frames message count
 	bool m_scrollToBottom;						//If true will scroll to the bottom of messages
 };
