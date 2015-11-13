@@ -34,18 +34,19 @@ private:
 	RakNet::RakPeerInterface *m_peer;
 	RakNet::Packet *m_packet;
 
-	
-
 	char m_serverIPBuff[16];
 	char m_userNameBuff[16];
 	char m_serverStatsStrBuff[255];
 	char m_connectionTxt[32];
 
+	float m_dt;
+	float m_upTime;			//how long the server has been up for
+
 	int m_windowWidth;
 	int m_windowHeight;
 
-	int m_totalMaxClients;
-	int m_currentRoomSize;
+	int m_totalMaxClients;	//Is the maximum clients ever
+	int m_currentRoomSize;	//Chosen room size in set up
 
 	
 	std::vector<std::string> m_serverMessages;

@@ -90,8 +90,10 @@ void Application::Draw()
 	//Render new frame
 	ImGui_ImplGlfw_NewFrame();
 
-		m_mainMenuState.Draw();
-
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+			m_mainMenuState.Draw();
+		ImGui::PopStyleVar();
+	
 	//Render IMGUI
 	ImGui::Render();
 }

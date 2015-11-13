@@ -16,7 +16,8 @@
 #define SERVER_PORT 60000
 #define TOTAL_MAX_CLIENTS 10
 ServerState::ServerState() : 
-m_serverStats(RakNet::RakNetStatistics())
+m_serverStats(RakNet::RakNetStatistics()),
+m_upTime(0.0f)
 {
 }
 
@@ -40,6 +41,9 @@ void ServerState::Initialise(GLFWwindow *a_pWindow, RakNet::RakPeerInterface *a_
 
 void ServerState::Update(float a_dt)
 {
+	m_dt = a_dt;
+	m_upTime += m_dt;
+
 	glfwGetWindowSize(m_pWindow, &m_windowWidth, &m_windowHeight);
 
 	CheckPackets();
@@ -63,9 +67,16 @@ void ServerState::Draw()
 
 void ServerState::DrawHeader()
 {
-	//TODO display info ie server size, connected people, ping if ur cool...
-	ImGui::Text("Room: 3/10");
-	ImGui::Text("Up Time: 01.20.19");
+	unsigned short connectionsSize;
+	std::string s;
+
+	m_peer->GetConnectionList(NULL, &connectionsSize);
+	s = "People: " + std::to_string(connectionsSize) + "/" + std::to_string(m_currentRoomSize);
+
+	
+
+	ImGui::Text(s.c_str());
+	ImGui::Text(std::to_string(m_upTime).c_str());
 	ImGui::Separator();
 }
 void ServerState::CheckPackets()

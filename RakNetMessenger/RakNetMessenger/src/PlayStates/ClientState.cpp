@@ -65,7 +65,6 @@ void ClientState::Draw()
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Once);
 
 	//BEGIN
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	if (ImGui::Begin("Messenger", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar))
 	{
 		DisplayOptionsDropDown();
@@ -78,7 +77,6 @@ void ClientState::Draw()
 
 	}
 	ImGui::End();
-	ImGui::PopStyleVar();
 	//END
 	
 }
@@ -91,8 +89,23 @@ void ClientState::DrawHeader()
 		ImGui::TextColored(TxtColours().green, "Your Name:");		ImGui::SameLine();	ImGui::Text(m_clientMessage.name);
 
 		ImGui::TextColored(TxtColours().green, "Server IP:");	ImGui::SameLine();	ImGui::Text(m_serverIPBuff);	ImGui::SameLine();
-		ImGui::Dummy(ImVec2(100, 10));	ImGui::SameLine();		ImGui::TextColored(TxtColours().green, "Connection: ");		ImGui::SameLine(); ImGui::Text(m_connectionTxt);
+		ImGui::Dummy(ImVec2(m_windowWidth * 0.1f, 10));	ImGui::SameLine();		ImGui::TextColored(TxtColours().green, "Connection: ");		
+		
+		//Display the retry button if the connection failed
+		std::string s = "Connection Failed...(Wrong IP)";
+		if (m_connectionTxt == s)
+		{
+			ImGui::SameLine();
+			if (ImGui::Button("Retry", ImVec2(50, 15)))
+			{
+				m_peer->Connect(m_serverIPBuff, 60000, 0, 0);
+				strcpy_s(m_connectionTxt, "Connecting...");
+			}
+		}
+		
+		ImGui::SameLine(); ImGui::Text(m_connectionTxt);
 
+		//if the user has chosen to dispay server stats
 		if (m_displayConnectionStats)
 			DrawConnectionStats();
 
@@ -123,8 +136,8 @@ void ClientState::DisplayMessages()
 		for (int i = 0; i < m_allDisplayMessages.size(); i++)
 		{
 			//Name : Text
-			ImGui::TextColored(ImVec4(.8, 1, .8, 1), m_allDisplayMessages[i].name); ImGui::SameLine();
-			ImGui::TextColored(ImVec4(.8, 1, .8, 1), ":"); ImGui::SameLine();
+			ImGui::TextColored(ImVec4(.5, 1, .5, 1), m_allDisplayMessages[i].name); ImGui::SameLine();
+			ImGui::TextColored(ImVec4(.5, 1, .5, 1), ":"); ImGui::SameLine();
 			ImGui::Text(m_allDisplayMessages[i].message);
 		}
 
@@ -168,7 +181,7 @@ void ClientState::TextBoxInput()
 	//If the send button is pressed
 	if (sendMessage)
 	{
-		//TODO:: Check that there is and actually message
+		//TODO:: Check that there is an actually message
 
 		//Getting the server adress
 		RakNet::SystemAddress address[1];
@@ -210,18 +223,18 @@ void ClientState::DisplayOptionsDropDown()
 				else
 					m_headerHeight -= 40;
 			}
-			if (ImGui::MenuItem("IP")) 
+			if (ImGui::MenuItem("Change IP")) 
 			{
-				//TODO:: add a way of changing the ip if possible
+				//TODO:: chane the ip
 			}
-			if (ImGui::MenuItem("Name")) 
+			if (ImGui::MenuItem("Change Name")) 
 			{
 				//TODO abilty to change name :)
 			}
 			ImGui::EndMenu();
 		}
 		
-		if (ImGui::BeginMenu("People"))
+		if (ImGui::BeginMenu("Connections"))
 		{
 			//TODO::Actually display connected people
 			ImGui::MenuItem("Person1");
